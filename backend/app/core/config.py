@@ -1,24 +1,26 @@
 import os
 from dotenv import load_dotenv
-from pathlib import Path
 
-# Load environment variables from .env file
+# Load environment variables from .env file if it exists
 load_dotenv()
 
-# Project base directory
-BASE_DIR = Path(__file__).resolve().parent.parent.parent
+class Settings:
+    PROJECT_NAME: str = "Book Management API"
+    PROJECT_VERSION: str = "1.0.0"
+    
+    POSTGRES_USER: str = os.getenv("PGUSER")
+    POSTGRES_PASSWORD: str = os.getenv("PGPASSWORD")
+    POSTGRES_SERVER: str = os.getenv("PGHOST", "localhost")
+    POSTGRES_PORT: str = os.getenv("PGPORT", "5432")
+    POSTGRES_DB: str = os.getenv("PGDATABASE")
+    DATABASE_URL: str = os.getenv(
+        "DATABASE_URL",
+        f"postgresql://{POSTGRES_USER}:{POSTGRES_PASSWORD}@{POSTGRES_SERVER}:{POSTGRES_PORT}/{POSTGRES_DB}"
+    )
+    
+    API_PREFIX: str = "/api"
+    
+    # CORS settings
+    BACKEND_CORS_ORIGINS: list = ["*"]
 
-# API settings
-API_V1_STR = "/api/v1"
-PROJECT_NAME = "Book Management System"
-
-# Database settings
-DATABASE_URL = os.environ.get("DATABASE_URL")
-
-# CORS settings
-ORIGINS = [
-    "http://localhost",
-    "http://localhost:5173",  # Vue.js default development server
-    "http://localhost:5000",  # Our API server
-    "*",  # For development purposes
-]
+settings = Settings()
