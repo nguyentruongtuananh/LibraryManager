@@ -1,35 +1,6 @@
 import { defineStore } from 'pinia'
-import axios from 'axios'
-
-// Define the Book interface
-export interface Book {
-  id: number
-  title: string
-  author: string
-  year: number
-  genre: string
-  description: string | null
-}
-
-// Define interfaces for creating and updating books
-export interface BookCreate {
-  title: string
-  author: string
-  year: number
-  genre: string
-  description?: string | null
-}
-
-export interface BookUpdate {
-  title?: string
-  author?: string
-  year?: number
-  genre?: string
-  description?: string | null
-}
-
-// API base URL
-const API_URL = '/api'
+import { bookApi } from '@/api/bookApi'
+import type { Book, BookCreate, BookUpdate } from '@/types/book'
 
 // Define the book store
 export const useBookStore = defineStore('book', {
@@ -65,14 +36,19 @@ export const useBookStore = defineStore('book', {
       
       // Sort the books
       result.sort((a, b) => {
-        let valueA = a[state.sortBy]
-        let valueB = b[state.sortBy]
+        const valueA = a[state.sortBy]
+        const valueB = b[state.sortBy]
         
-        if (typeof valueA === 'string') {
-          valueA = valueA.toLowerCase()
-          valueB = valueB.toLowerCase()
+        // Handle string comparisons
+        if (typeof valueA === 'string' && typeof valueB === 'string') {
+          const strA = valueA.toLowerCase()
+          const strB = valueB.toLowerCase()
+          if (strA < strB) return state.sortOrder === 'asc' ? -1 : 1
+          if (strA > strB) return state.sortOrder === 'asc' ? 1 : -1
+          return 0
         }
         
+        // Handle numeric comparisons
         if (valueA < valueB) return state.sortOrder === 'asc' ? -1 : 1
         if (valueA > valueB) return state.sortOrder === 'asc' ? 1 : -1
         return 0
@@ -93,8 +69,8 @@ export const useBookStore = defineStore('book', {
       this.loading = true
       this.error = null
       try {
-        const response = await axios.get(`${API_URL}/books`)
-        this.books = response.data
+        const books = await bookApi.getBooks()
+        this.books = books
       } catch (error) {
         console.error('Error fetching books:', error)
         this.error = 'Failed to fetch books'
@@ -107,9 +83,9 @@ export const useBookStore = defineStore('book', {
       this.loading = true
       this.error = null
       try {
-        const response = await axios.get(`${API_URL}/books/${id}`)
-        this.currentBook = response.data
-        return response.data
+        const book = await bookApi.getBook(id)
+        this.currentBook = book
+        return book
       } catch (error) {
         console.error(`Error fetching book ${id}:`, error)
         this.error = 'Failed to fetch book'
@@ -123,9 +99,9 @@ export const useBookStore = defineStore('book', {
       this.loading = true
       this.error = null
       try {
-        const response = await axios.post(`${API_URL}/books`, book)
-        this.books.push(response.data)
-        return response.data
+        const newBook = await bookApi.createBook(book)
+        this.books.push(newBook)
+        return newBook
       } catch (error) {
         console.error('Error creating book:', error)
         this.error = 'Failed to create book'
@@ -139,12 +115,12 @@ export const useBookStore = defineStore('book', {
       this.loading = true
       this.error = null
       try {
-        const response = await axios.put(`${API_URL}/books/${id}`, book)
+        const updatedBook = await bookApi.updateBook(id, book)
         const index = this.books.findIndex(b => b.id === id)
         if (index !== -1) {
-          this.books[index] = response.data
+          this.books[index] = updatedBook
         }
-        return response.data
+        return updatedBook
       } catch (error) {
         console.error(`Error updating book ${id}:`, error)
         this.error = 'Failed to update book'
@@ -158,7 +134,7 @@ export const useBookStore = defineStore('book', {
       this.loading = true
       this.error = null
       try {
-        await axios.delete(`${API_URL}/books/${id}`)
+        await bookApi.deleteBook(id)
         this.books = this.books.filter(book => book.id !== id)
         return true
       } catch (error) {

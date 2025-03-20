@@ -112,7 +112,7 @@
 
 <script lang="ts">
 import { defineComponent, ref, computed, watch, PropType } from 'vue'
-import type { Book } from '@/store/bookStore'
+import type { Book } from '@/types/book'
 
 export default defineComponent({
   name: 'BookForm',

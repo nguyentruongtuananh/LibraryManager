@@ -182,7 +182,8 @@
 
 <script lang="ts">
 import { defineComponent, ref, computed, onMounted, watch } from 'vue'
-import { useBookStore, Book } from '@/store/bookStore'
+import { useBookStore } from '@/store/bookStore'
+import type { Book } from '@/types/book'
 import BookForm from '@/components/BookForm.vue'
 import DeleteConfirmation from '@/components/DeleteConfirmation.vue'
 
