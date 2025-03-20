@@ -1,44 +1,55 @@
 <template>
-  <div class="max-w-4xl mx-auto">
-    <div class="bg-card rounded-lg shadow-md p-8 text-center mb-8">
-      <h1 class="text-4xl font-bold mb-4 bg-gradient-to-r from-primary to-blue-700 text-transparent bg-clip-text">Welcome to Book Management System</h1>
-      <p class="text-lg text-card-foreground/80 mb-6">
-        A full-stack application for managing your book collection
+  <div class="flex flex-col items-center justify-center py-12">
+    <div class="max-w-3xl mx-auto text-center">
+      <h1 class="text-4xl font-extrabold tracking-tight mb-4 bg-gradient-to-r from-primary to-primary-light bg-clip-text text-transparent">
+        Book Management System
+      </h1>
+      <p class="text-xl text-gray-600 dark:text-gray-300 mb-8">
+        A simple and elegant way to manage your book collection
       </p>
-      <router-link to="/books" class="inline-flex items-center justify-center rounded-md bg-primary px-6 py-3 text-primary-foreground shadow-sm hover:bg-primary/90 transition-colors">
-        View Books
-      </router-link>
-    </div>
-    
-    <div class="grid md:grid-cols-3 gap-6 mb-8">
-      <div class="bg-card rounded-lg shadow-sm p-6 border">
-        <h3 class="text-xl font-semibold mb-2">Create</h3>
-        <p class="text-card-foreground/70 mb-4">Add new books to your collection with detailed information.</p>
-      </div>
-      <div class="bg-card rounded-lg shadow-sm p-6 border">
-        <h3 class="text-xl font-semibold mb-2">Manage</h3>
-        <p class="text-card-foreground/70 mb-4">Edit, update or remove books from your library easily.</p>
-      </div>
-      <div class="bg-card rounded-lg shadow-sm p-6 border">
-        <h3 class="text-xl font-semibold mb-2">Search</h3>
-        <p class="text-card-foreground/70 mb-4">Find books by title, author, genre, or publication year.</p>
+      <div class="flex justify-center space-x-4">
+        <router-link to="/books" class="btn btn-primary px-6 py-3 rounded-lg">
+          Browse Books
+        </router-link>
       </div>
     </div>
-    
-    <div class="bg-card rounded-lg shadow-sm p-6 border">
-      <h2 class="text-2xl font-semibold mb-4">About This Application</h2>
-      <p class="text-card-foreground/80 mb-3">
-        This Book Management System was built using:
-      </p>
-      <ul class="list-disc list-inside space-y-1 text-card-foreground/70 mb-4">
-        <li>Vue.js with TypeScript and Composition API</li>
-        <li>FastAPI backend with SQLAlchemy</li>
-        <li>PostgreSQL database for data persistence</li>
-        <li>Tailwind CSS for modern, responsive styling</li>
-      </ul>
-      <p class="text-card-foreground/80">
-        Navigate to the Books page to start managing your collection!
-      </p>
+
+    <div class="mt-16 max-w-4xl mx-auto grid gap-8 md:grid-cols-3">
+      <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
+        <div class="w-12 h-12 bg-primary-100 dark:bg-primary-900 rounded-full flex items-center justify-center mb-4">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+          </svg>
+        </div>
+        <h3 class="text-lg font-semibold mb-2">Add New Books</h3>
+        <p class="text-gray-600 dark:text-gray-300">
+          Easily add new books to your collection with all the important details.
+        </p>
+      </div>
+
+      <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
+        <div class="w-12 h-12 bg-primary-100 dark:bg-primary-900 rounded-full flex items-center justify-center mb-4">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+          </svg>
+        </div>
+        <h3 class="text-lg font-semibold mb-2">Search and Filter</h3>
+        <p class="text-gray-600 dark:text-gray-300">
+          Find books quickly with powerful search and filtering capabilities.
+        </p>
+      </div>
+
+      <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
+        <div class="w-12 h-12 bg-primary-100 dark:bg-primary-900 rounded-full flex items-center justify-center mb-4">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" />
+          </svg>
+        </div>
+        <h3 class="text-lg font-semibold mb-2">Organize Collection</h3>
+        <p class="text-gray-600 dark:text-gray-300">
+          Keep your book collection organized by genre, author, or year.
+        </p>
+      </div>
     </div>
   </div>
 </template>

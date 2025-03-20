@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
+import axios from 'axios'
 
-// Define interfaces (matching our backend schema)
+// Define the Book interface
 export interface Book {
   id: number
   title: string
@@ -11,6 +11,7 @@ export interface Book {
   description: string | null
 }
 
+// Define interfaces for creating and updating books
 export interface BookCreate {
   title: string
   author: string
@@ -27,183 +28,170 @@ export interface BookUpdate {
   description?: string | null
 }
 
-export const useBookStore = defineStore('book', () => {
-  // State
-  const books = ref<Book[]>([])
-  const isLoading = ref(false)
-  const error = ref<string | null>(null)
-  const searchQuery = ref('')
-  const sortBy = ref('title')
-  const sortOrder = ref<'asc' | 'desc'>('asc')
+// API base URL
+const API_URL = '/api'
 
-  // Computed
-  const filteredAndSortedBooks = computed(() => {
-    let result = books.value
+// Define the book store
+export const useBookStore = defineStore('book', {
+  state: () => ({
+    books: [] as Book[],
+    loading: false,
+    error: null as string | null,
+    currentBook: null as Book | null,
+    searchQuery: '',
+    sortBy: 'title' as 'title' | 'author' | 'year',
+    sortOrder: 'asc' as 'asc' | 'desc',
+    selectedGenre: '' as string
+  }),
 
-    // Filter by search query
-    if (searchQuery.value) {
-      const query = searchQuery.value.toLowerCase()
-      result = result.filter(book => 
-        book.title.toLowerCase().includes(query) || 
-        book.author.toLowerCase().includes(query) ||
-        book.genre.toLowerCase().includes(query) ||
-        (book.description && book.description.toLowerCase().includes(query))
-      )
-    }
-
-    // Sort books
-    result = [...result].sort((a, b) => {
-      let comparison = 0
+  getters: {
+    filteredBooks: (state) => {
+      let result = [...state.books]
       
-      // Handle different sort fields
-      if (sortBy.value === 'title') {
-        comparison = a.title.localeCompare(b.title)
-      } else if (sortBy.value === 'author') {
-        comparison = a.author.localeCompare(b.author)
-      } else if (sortBy.value === 'year') {
-        comparison = a.year - b.year
-      } else if (sortBy.value === 'genre') {
-        comparison = a.genre.localeCompare(b.genre)
+      // Filter by search query
+      if (state.searchQuery) {
+        const query = state.searchQuery.toLowerCase()
+        result = result.filter(book => 
+          book.title.toLowerCase().includes(query) || 
+          book.author.toLowerCase().includes(query) ||
+          (book.description && book.description.toLowerCase().includes(query))
+        )
       }
       
-      // Apply sort order
-      return sortOrder.value === 'asc' ? comparison : -comparison
-    })
-
-    return result
-  })
-
-  // Actions
-  async function fetchBooks() {
-    isLoading.value = true
-    error.value = null
-    
-    try {
-      const response = await fetch('/api/books')
-      if (!response.ok) throw new Error('Failed to fetch books')
-      books.value = await response.json()
-    } catch (err) {
-      error.value = err instanceof Error ? err.message : 'An unknown error occurred'
-    } finally {
-      isLoading.value = false
-    }
-  }
-
-  async function getBook(id: number) {
-    isLoading.value = true
-    error.value = null
-    
-    try {
-      const response = await fetch(`/api/books/${id}`)
-      if (!response.ok) throw new Error('Failed to fetch book')
-      return await response.json()
-    } catch (err) {
-      error.value = err instanceof Error ? err.message : 'An unknown error occurred'
-      return null
-    } finally {
-      isLoading.value = false
-    }
-  }
-
-  async function createBook(book: BookCreate) {
-    isLoading.value = true
-    error.value = null
-    
-    try {
-      const response = await fetch('/api/books', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(book)
-      })
-      
-      if (!response.ok) throw new Error('Failed to create book')
-      
-      const newBook = await response.json()
-      books.value.push(newBook)
-      return newBook
-    } catch (err) {
-      error.value = err instanceof Error ? err.message : 'An unknown error occurred'
-      return null
-    } finally {
-      isLoading.value = false
-    }
-  }
-
-  async function updateBook(id: number, book: BookUpdate) {
-    isLoading.value = true
-    error.value = null
-    
-    try {
-      const response = await fetch(`/api/books/${id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(book)
-      })
-      
-      if (!response.ok) throw new Error('Failed to update book')
-      
-      const updatedBook = await response.json()
-      const index = books.value.findIndex(b => b.id === id)
-      
-      if (index !== -1) {
-        books.value[index] = updatedBook
+      // Filter by genre
+      if (state.selectedGenre) {
+        result = result.filter(book => book.genre === state.selectedGenre)
       }
       
-      return updatedBook
-    } catch (err) {
-      error.value = err instanceof Error ? err.message : 'An unknown error occurred'
-      return null
-    } finally {
-      isLoading.value = false
-    }
-  }
-
-  async function deleteBook(id: number) {
-    isLoading.value = true
-    error.value = null
-    
-    try {
-      const response = await fetch(`/api/books/${id}`, {
-        method: 'DELETE'
+      // Sort the books
+      result.sort((a, b) => {
+        let valueA = a[state.sortBy]
+        let valueB = b[state.sortBy]
+        
+        if (typeof valueA === 'string') {
+          valueA = valueA.toLowerCase()
+          valueB = valueB.toLowerCase()
+        }
+        
+        if (valueA < valueB) return state.sortOrder === 'asc' ? -1 : 1
+        if (valueA > valueB) return state.sortOrder === 'asc' ? 1 : -1
+        return 0
       })
       
-      if (!response.ok) throw new Error('Failed to delete book')
-      
-      // Remove book from local state
-      books.value = books.value.filter(b => b.id !== id)
-      return true
-    } catch (err) {
-      error.value = err instanceof Error ? err.message : 'An unknown error occurred'
-      return false
-    } finally {
-      isLoading.value = false
+      return result
+    },
+    
+    genres: (state) => {
+      const genreSet = new Set<string>()
+      state.books.forEach(book => genreSet.add(book.genre))
+      return Array.from(genreSet).sort()
     }
-  }
+  },
 
-  // Reset search and sort
-  function resetFilters() {
-    searchQuery.value = ''
-    sortBy.value = 'title'
-    sortOrder.value = 'asc'
-  }
-
-  return {
-    books,
-    isLoading,
-    error,
-    searchQuery,
-    sortBy,
-    sortOrder,
-    filteredAndSortedBooks,
-    fetchBooks,
-    getBook,
-    createBook,
-    updateBook,
-    deleteBook,
-    resetFilters
+  actions: {
+    async fetchBooks() {
+      this.loading = true
+      this.error = null
+      try {
+        const response = await axios.get(`${API_URL}/books`)
+        this.books = response.data
+      } catch (error) {
+        console.error('Error fetching books:', error)
+        this.error = 'Failed to fetch books'
+      } finally {
+        this.loading = false
+      }
+    },
+    
+    async getBook(id: number) {
+      this.loading = true
+      this.error = null
+      try {
+        const response = await axios.get(`${API_URL}/books/${id}`)
+        this.currentBook = response.data
+        return response.data
+      } catch (error) {
+        console.error(`Error fetching book ${id}:`, error)
+        this.error = 'Failed to fetch book'
+        return null
+      } finally {
+        this.loading = false
+      }
+    },
+    
+    async createBook(book: BookCreate) {
+      this.loading = true
+      this.error = null
+      try {
+        const response = await axios.post(`${API_URL}/books`, book)
+        this.books.push(response.data)
+        return response.data
+      } catch (error) {
+        console.error('Error creating book:', error)
+        this.error = 'Failed to create book'
+        return null
+      } finally {
+        this.loading = false
+      }
+    },
+    
+    async updateBook(id: number, book: BookUpdate) {
+      this.loading = true
+      this.error = null
+      try {
+        const response = await axios.put(`${API_URL}/books/${id}`, book)
+        const index = this.books.findIndex(b => b.id === id)
+        if (index !== -1) {
+          this.books[index] = response.data
+        }
+        return response.data
+      } catch (error) {
+        console.error(`Error updating book ${id}:`, error)
+        this.error = 'Failed to update book'
+        return null
+      } finally {
+        this.loading = false
+      }
+    },
+    
+    async deleteBook(id: number) {
+      this.loading = true
+      this.error = null
+      try {
+        await axios.delete(`${API_URL}/books/${id}`)
+        this.books = this.books.filter(book => book.id !== id)
+        return true
+      } catch (error) {
+        console.error(`Error deleting book ${id}:`, error)
+        this.error = 'Failed to delete book'
+        return false
+      } finally {
+        this.loading = false
+      }
+    },
+    
+    setSearchQuery(query: string) {
+      this.searchQuery = query
+    },
+    
+    setSortBy(sortBy: 'title' | 'author' | 'year') {
+      if (this.sortBy === sortBy) {
+        this.sortOrder = this.sortOrder === 'asc' ? 'desc' : 'asc'
+      } else {
+        this.sortBy = sortBy
+        this.sortOrder = 'asc'
+      }
+    },
+    
+    setSelectedGenre(genre: string) {
+      this.selectedGenre = genre
+    },
+    
+    resetFilters() {
+      this.searchQuery = ''
+      this.selectedGenre = ''
+      this.sortBy = 'title'
+      this.sortOrder = 'asc'
+    }
   }
 })
